@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IMS Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      height: 100vh;
+      background:
+        linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)),
+        url('https://images.unsplash.com/photo-1556761175-5973dc0f32e7?auto=format&fit=crop&w=1600&q=80') no-repeat center center / cover;
+      color: #fff;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Hero Section */
+    .hero {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 85%;
+      max-width: 1200px;
+      margin: auto;
+      margin-top: 5rem;
+      /* to avoid navbar overlap */
+      gap: 2rem;
+    }
+
+    /* Left Text */
+    .hero-text {
+      flex: 1;
+    }
+
+    .hero-text h1 {
+      font-size: 2.6rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .hero-text span {
+      color: #ff5c2b;
+    }
+
+    .hero-text p {
+      margin: 1.2rem 0;
+      font-size: 1.1rem;
+      color: #d0d0d0;
+      max-width: 90%;
+    }
+
+    .hero-text button {
+      padding: 0.8rem 1.6rem;
+      border: none;
+      border-radius: 8px;
+      background-color: #ff5c2b;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    .hero-text button:hover {
+      background-color: #e54c1a;
+    }
+
+    /* Right Image */
+    .hero-image {
+      flex: 1;
+      text-align: center;
+    }
+
+    .hero-image img {
+      width: 80%;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+      transition: transform 0.3s ease;
+    }
+
+    .hero-image img:hover {
+      transform: scale(1.03);
+    }
+
+    /* Responsive Design */
+    @media (max-width: 900px) {
+      .hero {
+        flex-direction: column-reverse;
+        text-align: center;
+      }
+
+      .hero-image img {
+        width: 70%;
+      }
+
+      .hero-text h1 {
+        font-size: 2rem;
+      }
+
+      .navbar {
+        flex-direction: column;
+        gap: 0.8rem;
+      }
+
+      nav ul {
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+
+      <!-- Toggler button -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#">Managers</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#">Product & Stocks</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#">Suppliers</a></li>
+        </ul>
+
+        <!-- User icon aligned right -->
+        <div class="d-flex">
+          <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-text">
+      <h1>Welcome to <span>IMS Dashboard</span></h1>
+      <p>Monitor your inventory health, analyze stock trends, and manage suppliers all in one place.</p>
+      <button>Get Started</button>
+    </div>
+
+    <div class="hero-image">
+      <img src="logo1.png" alt="Dashboard Image" style="border-radius: 10%;">
+    </div>
+  </section>
+  <script>
+
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

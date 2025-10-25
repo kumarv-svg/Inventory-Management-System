@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Managers</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    table {
+      width: 100%;
+      margin: auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      color: rgb(0, 0, 0);
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    #noManagers {
+      text-align: center;
+      color: gray;
+      font-style: italic;
+      margin-top: 20px;
+    }
+    #notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #198754;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body style="font-family:'Poppins', sans-serif;">
+  <div id="notification"></div>
+
+  <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+      
+      <!-- Toggler button -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" href="/admin_dashboard.html">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/admin_managers.html">Managers</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/admin_product.html">Product & Stocks</a></li>
+          <li class="nav-item"><a class="nav-link active" href="/admin_supplier_ver.html">Suppliers</a></li>
+        </ul>
+  
+        <!-- User icon aligned right -->
+        <div class="d-flex">
+          <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="hero-section" style="margin: 5%;">
+    <!-- Search / Filter -->
+    <div class="mb-3">
+      <input type="text" id="searchInput" class="form-control" placeholder="Search by Name, ID, Dept, Email..." onkeyup="filterTable()">
+    </div>
+
+    <!-- Table -->
+    <div class="table" style="margin-top: 30px;">
+      <table id="managerTable">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Age / D.O.B</th>
+            <th>Phone</th>
+            <th>E-mail</th>
+            <th>Assignment Dept</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="managerBody"></tbody>
+      </table>
+      <p id="noManagers">No managers available.</p>
+    </div>
+
+    <!-- Add Manager Form -->
+    <div class="container" style="width: 100%; margin-top: 40px;">
+      <div class="card shadow-sm rounded-4">
+        <div class="card-header bg-primary text-white text-center rounded-top-4">
+          <h4 class="mb-0">Add / Edit Manager</h4>
+        </div>
+        <div class="card-body">
+          <form id="addManagerForm">
+            <div class="mb-3">
+              <label for="managerName" class="form-label">Name</label>
+              <input type="text" class="form-control" id="managerName" placeholder="Enter full name" required>
+            </div>
+            <div class="mb-3">
+              <label for="managerAge" class="form-label">Age / D.O.B</label>
+              <input type="date" class="form-control" id="managerAge" required>
+            </div>
+            <div class="mb-3">
+              <label for="managerPhone" class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="managerPhone" placeholder="Enter phone number" required>
+            </div>
+            <div class="mb-3">
+              <label for="managerEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="managerEmail" placeholder="Enter email address" required>
+            </div>
+            <div class="mb-3">
+              <label for="managerDept" class="form-label">Assigned Department</label>
+              <select class="form-select" id="managerDept" required>
+                <option selected disabled>Select department</option>
+                <option>Electronics</option>
+                <option>Grocery</option>
+                <option>Dairy</option>
+                <option>Clothing</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="managerCode" class="form-label">Manager ID (Generated)</label>
+              <input type="text" class="form-control" id="managerCode" readonly>
+            </div>
+            <div class="text-center">
+              <button type="button" class="btn btn-success w-50 mb-2" id="generateCodeBtn" onclick="generateCode()">Generate Code</button>
+              <button type="button" class="btn btn-primary w-50 mb-2" id="addManagerBtn" style="display:none;" onclick="addManager()">Add Manager</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let editIndex = null;
+
+    function showNotification(message) {
+      const notification = document.getElementById("notification");
+      notification.innerText = message;
+      notification.style.display = "block";
+      setTimeout(() => { notification.style.display = "none"; }, 2000);
+    }
+
+    function generateCode() {
+      const name = document.getElementById("managerName").value.trim();
+      const dob = document.getElementById("managerAge").value;
+      const phone = document.getElementById("managerPhone").value.trim();
+      const email = document.getElementById("managerEmail").value.trim();
+      const dept = document.getElementById("managerDept").value;
+
+      if (!name || !dob || !phone || !email || dept === "Select department") {
+        showNotification("Please fill all fields before generating code!");
+        return;
+      }
+
+      const code = "MN" + Math.floor(100000 + Math.random() * 900000);
+      document.getElementById("managerCode").value = code;
+      showNotification("Manager Code Generated: " + code);
+
+      document.getElementById("addManagerBtn").style.display = "inline-block";
+    }
+
+    function addManager() {
+      const name = document.getElementById("managerName").value.trim();
+      const dob = document.getElementById("managerAge").value;
+      const phone = document.getElementById("managerPhone").value.trim();
+      const email = document.getElementById("managerEmail").value.trim();
+      const dept = document.getElementById("managerDept").value;
+      const code = document.getElementById("managerCode").value;
+
+      if(editIndex !== null) {
+        // Update existing row
+        const tbody = document.getElementById("managerBody");
+        const row = tbody.rows[editIndex];
+        row.cells[0].innerText = code;
+        row.cells[1].innerText = name;
+        row.cells[2].innerText = dob;
+        row.cells[3].innerText = phone;
+        row.cells[4].innerText = email;
+        row.cells[5].innerText = dept;
+        editIndex = null;
+      } else {
+        // Add new row
+        const tbody = document.getElementById("managerBody");
+        const noDataText = document.getElementById("noManagers");
+        noDataText.style.display = "none";
+
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td>${code}</td>
+          <td>${name}</td>
+          <td>${dob}</td>
+          <td>${phone}</td>
+          <td>${email}</td>
+          <td>${dept}</td>
+          <td>
+            <button class="btn btn-sm btn-warning" onclick="editManager(this)">Edit</button>
+            <button class="btn btn-sm btn-danger" onclick="deleteManager(this)">Delete</button>
+          </td>
+        `;
+        tbody.appendChild(row);
+      }
+
+      document.getElementById("addManagerForm").reset();
+      document.getElementById("addManagerBtn").style.display = "none";
+      document.getElementById("managerCode").value = "";
+      showNotification("Manager added successfully!");
+    }
+
+    function editManager(button) {
+      const row = button.parentElement.parentElement;
+      editIndex = row.rowIndex - 1; // Adjust for header row
+
+      document.getElementById("managerName").value = row.cells[1].innerText;
+      document.getElementById("managerAge").value = row.cells[2].innerText;
+      document.getElementById("managerPhone").value = row.cells[3].innerText;
+      document.getElementById("managerEmail").value = row.cells[4].innerText;
+      document.getElementById("managerDept").value = row.cells[5].innerText;
+      document.getElementById("managerCode").value = row.cells[0].innerText;
+
+      document.getElementById("addManagerBtn").style.display = "inline-block";
+      document.getElementById("generateCodeBtn").style.display = "none";
+    }
+
+    function deleteManager(button) {
+      const row = button.parentElement.parentElement;
+      row.remove();
+
+      if(document.getElementById("managerBody").rows.length === 0) {
+        document.getElementById("noManagers").style.display = "block";
+      }
+    }
+
+    function filterTable() {
+      const input = document.getElementById("searchInput").value.toUpperCase();
+      const table = document.getElementById("managerTable");
+      const tr = table.getElementsByTagName("tr");
+      let visibleRows = 0;
+
+      for (let i = 1; i < tr.length; i++) {
+        const tds = tr[i].getElementsByTagName("td");
+        let show = false;
+
+        for (let j = 0; j < tds.length - 1; j++) { // exclude actions column
+          if (tds[j].innerText.toUpperCase().includes(input)) {
+            show = true;
+            break;
+          }
+        }
+
+        tr[i].style.display = show ? "" : "none";
+        if (show) visibleRows++;
+      }
+
+      document.getElementById("noManagers").style.display = visibleRows === 0 ? "block" : "none";
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

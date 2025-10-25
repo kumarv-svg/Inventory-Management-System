@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    .history-row {
+      background-color: #f8f9fa;
+      font-size: 0.9rem;
+    }
+
+    #noProducts {
+      text-align: center;
+      color: gray;
+      font-style: italic;
+      margin: 10px 0;
+    }
+
+    .low-stock-bar {
+      background-color: #dc3545 !important;
+    }
+  </style>
+</head>
+
+<body class="bg-light" style="font-family:'Poppins', sans-serif;">
+  <nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary shadow-sm">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+      
+      <!-- Toggler button -->
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+        aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+  
+      <div class="collapse navbar-collapse" id="navbarSupportedContent">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#">Manager Dashboard</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#reports">Reports</a></li>
+        </ul>
+  
+        <!-- User icon aligned right -->
+        <div class="d-flex">
+          <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid p-4">
+    <h2 class="text-center mb-4">Welcome, Manager.</h2>
+
+    <!-- Tabs -->
+    <ul class="nav nav-tabs mb-4" id="dashboardTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="manager-tab" data-bs-toggle="tab" data-bs-target="#manager" type="button"
+          role="tab">Manager Dashboard</button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="reports-tab" data-bs-toggle="tab" data-bs-target="#reports" type="button"
+          role="tab">Reports</button>
+      </li>
+    </ul>
+
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="manager" role="tabpanel">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-primary text-white text-center">Add New Product</div>
+          <div class="card-body">
+            <form id="addProductForm" class="row g-3">
+              <div class="col-md-2"><input type="text" class="form-control" id="productID" placeholder="Product ID"
+                  required></div>
+              <div class="col-md-2"><input type="text" class="form-control" id="productName" placeholder="Product Name"
+                  required></div>
+              <div class="col-md-2"><input type="number" class="form-control" id="quantity" placeholder="Quantity"
+                  required></div>
+              <div class="col-md-2"><input type="number" class="form-control" id="price" placeholder="Price" required>
+              </div>
+              <div class="col-md-2"><input type="text" class="form-control" id="supplier" placeholder="Supplier"
+                  required></div>
+              <div class="col-md-2"><button type="submit" class="btn btn-success w-100">Add Product</button></div>
+            </form>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-secondary text-white">Product List</div>
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-striped" id="productTable">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Name</th>
+                  <th>Quantity</th>
+                  <th>Price</th>
+                  <th>Total Price</th>
+                  <th>Supplier</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="productTableBody"></tbody>
+            </table>
+            <p id="noProducts">No products available.</p>
+          </div>
+        </div>
+
+        <div class="card shadow-sm mb-4">
+          <div class="card-header bg-info text-white">Change History</div>
+          <div class="card-body table-responsive">
+            <table class="table table-bordered table-sm" id="historyTable">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Action</th>
+                  <th>Product ID</th>
+                  <th>Old Data</th>
+                  <th>New Data</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="reports" role="tabpanel">
+        <div class="card shadow-sm mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center bg-success text-white">
+            Product Reports
+            
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <canvas id="stockBarChart"></canvas>
+              </div>
+              <div class="col-md-6">
+                <canvas id="salesLineChart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="btn btn-sm btn-primary" onclick="exportReportsPDF()">Download PDF</button>
+    </div>
+  </div>
+  
+  <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Edit Product</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editProductForm">
+            <input type="hidden" id="editIndex">
+            <div class="mb-3">
+              <label class="form-label">Product ID</label>
+              <input type="text" class="form-control" id="editId" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Product Name</label>
+              <input type="text" class="form-control" id="editName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Quantity</label>
+              <input type="number" class="form-control" id="editQuantity" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Price</label>
+              <input type="number" class="form-control" id="editPrice" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Supplier</label>
+              <input type="text" class="form-control" id="editSupplier" required>
+            </div>
+            <button type="submit" class="btn btn-success w-100">Save Changes</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const productTableBody = document.getElementById('productTableBody');
+    const historyTableBody = document.getElementById('historyTableBody');
+    const noProductsText = document.getElementById('noProducts');
+    const editModal = new bootstrap.Modal(document.getElementById('editModal'));
+
+    let products = [];
+    let history = [];
+
+    // Add Product
+    document.getElementById('addProductForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const newProduct = {
+        id: document.getElementById('productID').value,
+        name: document.getElementById('productName').value,
+        quantity: parseFloat(document.getElementById('quantity').value),
+        price: parseFloat(document.getElementById('price').value),
+        supplier: document.getElementById('supplier').value,
+        sales: []
+      };
+      products.unshift(newProduct);
+      addHistory('Added', newProduct.id, '-', JSON.stringify(newProduct));
+      e.target.reset();
+      renderProducts();
+      updateCharts();
+    });
+
+    // Render Products Table
+    function renderProducts() {
+      productTableBody.innerHTML = '';
+      if (products.length === 0) {
+        noProductsText.style.display = 'block';
+        return;
+      }
+      noProductsText.style.display = 'none';
+      products.forEach((p, index) => {
+        const totalPrice = (p.quantity * p.price).toFixed(2);
+        const row = document.createElement('tr');
+        row.innerHTML = `
+             <td>${p.id}</td>
+             <td>${p.name}</td>
+             <td>${p.quantity}</td>
+             <td>${p.price}</td>
+             <td>${totalPrice}</td>
+             <td>${p.supplier}</td>
+             <td>
+                 <button class="btn btn-sm btn-primary me-1" onclick="editProduct(${index})">Edit</button>
+                 <button class="btn btn-sm btn-danger" onclick="deleteProduct(${index})">Delete</button>
+             </td>
+         `;
+        productTableBody.appendChild(row);
+      });
+    }
+
+    // Edit Product
+    function editProduct(index) {
+      const p = products[index];
+      document.getElementById('editIndex').value = index;
+      document.getElementById('editId').value = p.id;
+      document.getElementById('editName').value = p.name;
+      document.getElementById('editQuantity').value = p.quantity;
+      document.getElementById('editPrice').value = p.price;
+      document.getElementById('editSupplier').value = p.supplier;
+      editModal.show();
+    }
+
+    // Save Edit
+    document.getElementById('editProductForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const index = document.getElementById('editIndex').value;
+      const oldData = {};
+      const newData = {};
+      const fields = ['Name', 'Quantity', 'Price', 'Supplier'];
+
+      fields.forEach(f => {
+        let key = f.toLowerCase();
+        let oldVal = products[index][key];
+        let newVal = document.getElementById('edit' + f).value;
+        if (key === 'quantity' || key === 'price') newVal = parseFloat(newVal);
+        if (oldVal != newVal) {
+          oldData[key] = oldVal;
+          newData[key] = newVal;
+          products[index][key] = newVal;
+        }
+      });
+
+      if (Object.keys(oldData).length)
+        addHistory('Edited', products[index].id, JSON.stringify(oldData), JSON.stringify(newData));
+
+      renderProducts();
+      updateCharts();
+      editModal.hide();
+    });
+
+    // Delete Product
+    function deleteProduct(index) {
+      const p = products[index];
+      addHistory('Deleted', p.id, JSON.stringify(p), '-');
+      products.splice(index, 1);
+      renderProducts();
+      updateCharts();
+    }
+
+    // History
+    function addHistory(action, id, oldData, newData) {
+      history.unshift({
+        time: new Date().toLocaleString(),
+        action,
+        id,
+        oldData,
+        newData
+      });
+      renderHistory();
+    }
+    function renderHistory() {
+      historyTableBody.innerHTML = '';
+      history.forEach(h => {
+        const row = document.createElement('tr');
+        row.className = 'history-row';
+        row.innerHTML = `
+             <td>${h.time}</td>
+             <td>${h.action}</td>
+             <td>${h.id}</td>
+             <td>${h.oldData}</td>
+             <td>${h.newData}</td>
+         `;
+        historyTableBody.appendChild(row);
+      });
+    }
+
+    // Charts
+    let stockBarChart, salesLineChart;
+    function updateCharts() {
+      const ctxBar = document.getElementById('stockBarChart').getContext('2d');
+      if (stockBarChart) stockBarChart.destroy();
+      stockBarChart = new Chart(ctxBar, {
+        type: 'bar',
+        data: {
+          labels: products.map(p => p.name),
+          datasets: [{
+            label: 'Stock Quantity',
+            data: products.map(p => p.quantity),
+            backgroundColor: products.map(p => p.quantity <= 10 ? '#dc3545' : '#36a2eb')
+          }]
+        },
+        options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+      });
+
+      const ctxLine = document.getElementById('salesLineChart').getContext('2d');
+      if (salesLineChart) salesLineChart.destroy();
+      salesLineChart = new Chart(ctxLine, {
+        type: 'line',
+        data: {
+          labels: ['Day1', 'Day2', 'Day3', 'Day4', 'Day5'],
+          datasets: products.map(p => ({
+            label: p.name,
+            data: p.sales.length ? p.sales : [0, 0, 0, 0, 0],
+            borderColor: getRandomColor(),
+            fill: false,
+            tension: 0.2
+          }))
+        },
+        options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+      });
+    }
+    function getRandomColor() { const letters = '0123456789ABCDEF'; let color = '#'; for (let i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)]; return color; }
+
+    // Export PDF
+    function exportReportsPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFontSize(18);
+      doc.text("Product Reports - Online Supermarket", 14, 20);
+      doc.setFontSize(12);
+
+      // Stock Table
+      const tableColumn = ["ID", "Product", "Quantity", "Price", "Total Price", "Supplier"];
+      const tableRows = products.map(p => [p.id, p.name, p.quantity, p.price, (p.quantity * p.price).toFixed(2), p.supplier]);
+      doc.autoTable({ head: [tableColumn], body: tableRows, startY: 30 });
+
+      // Bar Chart
+      const barImg = document.getElementById('stockBarChart').toDataURL('image/png', 1.0);
+      doc.addPage();
+      doc.text("Stock Levels", 14, 15);
+      doc.addImage(barImg, 'PNG', 15, 25, 180, 100);
+
+      // Line Chart
+      const lineImg = document.getElementById('salesLineChart').toDataURL('image/png', 1.0);
+      doc.addPage();
+      doc.text("Sales Trend", 14, 15);
+      doc.addImage(lineImg, 'PNG', 15, 25, 180, 100);
+
+      doc.save("Product_Reports.pdf");
+    }
+
+    // Initial render
+    renderProducts();
+    renderHistory();
+    updateCharts();
+  </script>
+</body>
+
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin - Products</title>
+  <!-- <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"> -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    table {
+      width: 100%;
+      margin: auto;
+      border-collapse: collapse;
+      background: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px 15px;
+      text-align: center;
+      border-bottom: 1px solid #ddd;
+    }
+    th {
+      color: rgb(0, 0, 0);
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    #noProducts {
+      text-align: center;
+      color: gray;
+      font-style: italic;
+      margin-top: 20px;
+    }
+    #notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background-color: #198754;
+      color: white;
+      padding: 12px 20px;
+      border-radius: 6px;
+      display: none;
+      z-index: 1000;
+    }
+  </style>
+</head>
+<body style="font-family:'Poppins', sans-serif;;">
+
+<div id="notification"></div>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-body-tertiary shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+    
+    <!-- Toggler button -->
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent"
+      aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarSupportedContent">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="/admin_dashboard.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_managers.html">Managers</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_product.html">Product & Stocks</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_supplier_ver.html">Suppliers</a></li>
+      </ul>
+
+      <!-- User icon aligned right -->
+      <div class="d-flex">
+        <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+      </div>
+    </div>
+  </div>
+</nav>
+
+
+<div class="hero-section" style="margin: 5%;">
+  <h1 style="text-align: center;">Products and Stock Management</h1>
+
+  <!-- Search Filter -->
+  <div class="mb-3 mt-4">
+    <input type="text" id="searchInput" class="form-control" placeholder="Search by any field..." onkeyup="filterTable()">
+  </div>
+
+  <!-- Product Table -->
+  <div class="table" style="margin-top: 30px;">
+    <table id="productTable">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Quantity</th>
+          <th>Price</th>
+          <th>Total Price</th>
+          <th>Supplier</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="productBody"></tbody>
+    </table>
+    <p id="noProducts">No products available.</p>
+  </div>
+
+  <!-- Add Product Form -->
+  <div class="container" style="width: 100%; margin-top: 40px;">
+    <div class="card shadow-sm rounded-4">
+      <div class="card-header bg-primary text-white text-center rounded-top-4">
+        <h4 class="mb-0">Add / Edit Product</h4>
+      </div>
+      <div class="card-body">
+        <form id="addProductForm">
+          <div class="mb-3">
+            <label for="productName" class="form-label">Product Name</label>
+            <input type="text" class="form-control" id="productName" placeholder="Enter product name" required>
+          </div>
+          <div class="mb-3">
+            <label for="productCategory" class="form-label">Category</label>
+            <select class="form-select" id="productCategory" required>
+              <option selected disabled>Select category</option>
+              <option>Electronics</option>
+              <option>Grocery</option>
+              <option>Dairy</option>
+              <option>Clothing</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="productQuantity" class="form-label">Quantity</label>
+            <input type="number" class="form-control" id="productQuantity" placeholder="Enter quantity" required>
+          </div>
+          <div class="mb-3">
+            <label for="productPrice" class="form-label">Price</label>
+            <input type="number" class="form-control" id="productPrice" placeholder="Enter price per unit" required>
+          </div>
+          <div class="mb-3">
+            <label for="productSupplier" class="form-label">Supplier</label>
+            <input type="text" class="form-control" id="productSupplier" placeholder="Enter supplier name" required>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-primary w-50">Add Product</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let editIndex = null;
+
+function showNotification(message) {
+  const notification = document.getElementById("notification");
+  notification.innerText = message;
+  notification.style.display = "block";
+  setTimeout(() => { notification.style.display = "none"; }, 2000);
+}
+
+document.getElementById("addProductForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+  
+  const name = document.getElementById("productName").value.trim();
+  const category = document.getElementById("productCategory").value;
+  const quantity = parseFloat(document.getElementById("productQuantity").value);
+  const price = parseFloat(document.getElementById("productPrice").value);
+  const supplier = document.getElementById("productSupplier").value.trim();
+  const totalPrice = (quantity * price).toFixed(2);
+  const id = "P" + Math.floor(1000 + Math.random() * 9000);
+
+  const tbody = document.getElementById("productBody");
+  const noDataText = document.getElementById("noProducts");
+  noDataText.style.display = "none";
+
+  if(editIndex !== null) {
+    // Edit existing row
+    const row = tbody.rows[editIndex];
+    row.cells[0].innerText = row.cells[0].innerText; // Keep same ID
+    row.cells[1].innerText = name;
+    row.cells[2].innerText = category;
+    row.cells[3].innerText = quantity;
+    row.cells[4].innerText = price;
+    row.cells[5].innerText = totalPrice;
+    row.cells[6].innerText = supplier;
+    editIndex = null;
+    showNotification("Product updated successfully!");
+  } else {
+    // Add new row
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${id}</td>
+      <td>${name}</td>
+      <td>${category}</td>
+      <td>${quantity}</td>
+      <td>${price}</td>
+      <td>${totalPrice}</td>
+      <td>${supplier}</td>
+      <td>
+        <button class="btn btn-sm btn-warning" onclick="editProduct(this)">Edit</button>
+        <button class="btn btn-sm btn-danger" onclick="deleteProduct(this)">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(row);
+    showNotification("Product added successfully!");
+  }
+
+  this.reset();
+});
+
+function editProduct(button) {
+  const row = button.parentElement.parentElement;
+  editIndex = row.rowIndex - 1;
+
+  document.getElementById("productName").value = row.cells[1].innerText;
+  document.getElementById("productCategory").value = row.cells[2].innerText;
+  document.getElementById("productQuantity").value = row.cells[3].innerText;
+  document.getElementById("productPrice").value = row.cells[4].innerText;
+  document.getElementById("productSupplier").value = row.cells[6].innerText;
+}
+
+function deleteProduct(button) {
+  const row = button.parentElement.parentElement;
+  row.remove();
+
+  if(document.getElementById("productBody").rows.length === 0) {
+    document.getElementById("noProducts").style.display = "block";
+  }
+  showNotification("Product deleted successfully!");
+}
+
+function filterTable() {
+  const input = document.getElementById("searchInput").value.toUpperCase();
+  const table = document.getElementById("productTable");
+  const tr = table.getElementsByTagName("tr");
+  let visibleRows = 0;
+
+  for(let i=1; i<tr.length; i++) {
+    const tds = tr[i].getElementsByTagName("td");
+    let show = false;
+
+    for(let j=0; j<tds.length-1; j++) {
+      if(tds[j].innerText.toUpperCase().includes(input)) {
+        show = true;
+        break;
+      }
+    }
+    tr[i].style.display = show ? "" : "none";
+    if(show) visibleRows++;
+  }
+
+  document.getElementById("noProducts").style.display = visibleRows === 0 ? "block" : "none";
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-FKyoEForCGlyvwx9Hj09JcYn3nv7wiPVlz7YYwJrWVcXK/BmnVDxM+D2scQbITxI" crossorigin="anonymous"></script>
+<!-- <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script> -->
+</body>
+</html>

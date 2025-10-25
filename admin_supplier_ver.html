@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Suppliers</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  .card-status-pending { border-left: 5px solid #ffc107; }
+  .card-status-confirmed { border-left: 5px solid #28a745; }
+  .card-status-deleted { border-left: 5px solid #dc3545; opacity: 0.6; pointer-events: none; }
+  .low-stock { border-left: 5px solid #dc3545 !important; }
+  #lowStockAlert { position: fixed; bottom: 1%; right: 10px; z-index: 1050; min-width: 250px; }
+  #noDataMessage, #noSupplierMsg { text-align: center; font-size: 1.2rem; color: #6c757d; margin-top: 30px; }
+</style>
+</head>
+<body style="font-family:'Poppins', sans-serif;">
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="margin-right: 40px;">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="/admin_dashboard.html">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_managers.html">Managers</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_product.html">Product & Stocks</a></li>
+        <li class="nav-item"><a class="nav-link active" href="/admin_supplier_ver.html">Suppliers</a></li>
+      </ul>
+      <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-section" style="margin: 3%;">
+  <div id="lowStockAlert"></div>
+
+  <div class="container-fluid p-3">
+    <h2 class="text-center mb-4">Supermarket Admin Dashboard</h2>
+
+    <div class="container mb-4">
+      <form id="addSupplierForm" class="row g-3">
+        <div class="col-md-2"><input type="text" id="supplierID" class="form-control" placeholder="Supplier ID" required></div>
+        <div class="col-md-2"><input type="text" id="supplierName" class="form-control" placeholder="Supplier Name" required></div>
+        <div class="col-md-2"><input type="text" id="productName" class="form-control" placeholder="Product Name" required></div>
+        <div class="col-md-2"><input type="number" id="quantity" class="form-control" placeholder="Quantity" required></div>
+        <div class="col-md-2"><input type="number" id="price" class="form-control" placeholder="Price/unit" required></div>
+        <div class="col-md-2 d-grid">
+          <button type="submit" class="btn btn-primary">Send Request</button>
+        </div>
+      </form>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <input type="text" id="searchSupplier" class="form-control" placeholder="Search by ID, Name, Product..." onkeyup="filterCards()">
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="statusTabs">
+      <li class="nav-item"><a class="nav-link active" href="#" onclick="showStatus('all', event)">All</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('pending', event)">Pending</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('confirmed', event)">Confirmed</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('deleted', event)">Deleted</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('sent', event)">Sent Requests</a></li>
+    </ul>
+  </div>
+
+  <div class="row g-4 px-3" id="supplierCardsContainer"></div>
+  <div id="noDataMessage"></div>
+
+  <div class="row mt-5">
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-info text-white">Stock per Product</div>
+        <div class="card-body">
+          <canvas id="stockChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3" style="margin-bottom: 90px;">
+    <h3 class="text-center mb-3">Supplier Directory</h3>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form id="supplierListForm" class="row g-3 mb-4">
+          <div class="col-md-2"><input type="text" id="dirName" class="form-control" placeholder="Supplier Name" required></div>
+          <div class="col-md-2"><input type="email" id="dirEmail" class="form-control" placeholder="Email" required></div>
+          <div class="col-md-2"><input type="text" id="dirPhone" class="form-control" placeholder="Phone" required></div>
+          <div class="col-md-2"><input type="text" id="dirCode" class="form-control" placeholder="Generated Code" readonly></div>
+          <div class="col-md-2 d-grid"><button type="submit" class="btn btn-success">Add Supplier</button></div>
+        </form>
+
+        <table class="table table-bordered table-hover text-center align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Name</th><th>Email</th><th>Phone</th><th>Code</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="supplierTableBody"></tbody>
+        </table>
+        <div id="noSupplierMsg"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let suppliers = [
+  {id:'SUP001', name:'Ravi Kumar', product:'Rice', quantity:50, price:20, status:'pending'},
+  {id:'SUP002', name:'Meena Sharma', product:'Milk', quantity:8, price:30, status:'pending'}
+];
+
+let supplierCardsContainer = document.getElementById('supplierCardsContainer');
+let lowStockAlert = document.getElementById('lowStockAlert');
+let noDataMessage = document.getElementById('noDataMessage');
+
+// Add / Send Request
+document.getElementById('addSupplierForm').addEventListener('submit', e => {
+  e.preventDefault();
+  let id = document.getElementById('supplierID').value;
+  let name = document.getElementById('supplierName').value;
+  let product = document.getElementById('productName').value;
+  let quantity = parseInt(document.getElementById('quantity').value);
+  let price = parseFloat(document.getElementById('price').value);
+
+  suppliers.unshift({id, name, product, quantity, price, status:'sent'});
+  e.target.reset();
+  renderCards();
+  showNotification(`Request for ${product} sent successfully!`);
+});
+
+// Notification
+function showNotification(msg) {
+  lowStockAlert.innerHTML = `
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+      ${msg}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+}
+
+// Render Cards
+function renderCards() {
+  supplierCardsContainer.innerHTML = '';
+  let lowStockProducts = [];
+
+  suppliers.forEach((s, index) => {
+    const card = document.createElement('div');
+    card.className = `col-md-4 supplier-card`;
+    card.dataset.index = index;
+    card.dataset.status = s.status;
+
+    let borderClass = s.status === 'pending' ? 'card-status-pending' :
+                      s.status === 'confirmed' ? 'card-status-confirmed' :
+                      s.status === 'deleted' ? 'card-status-deleted' : 'card-status-pending';
+
+    if(s.quantity <=10 && s.status!=='deleted') borderClass = 'low-stock';
+
+    card.classList.add(borderClass);
+
+    card.innerHTML = `
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div><strong>ID:</strong> ${s.id}</div>
+          <div><strong>Name:</strong> ${s.name}</div>
+          <div><strong>Product:</strong> ${s.product}</div>
+          <div><strong>Quantity:</strong> ${s.quantity}</div>
+          <div><strong>Price/unit:</strong> ${s.price}</div>
+          <div><strong>Total Price:</strong> ${s.quantity * s.price}</div>
+          <div><strong>Status:</strong> 
+            <span class="badge bg-${s.status==='pending'?'warning':s.status==='confirmed'?'success':'secondary'} text-white">
+              ${capitalize(s.status)}
+            </span>
+          </div>
+        </div>
+        <div class="card-footer text-center bg-light">
+          ${s.status!=='deleted' ? `<button class="btn btn-sm btn-success me-1" onclick="updateStatus(${index}, 'confirmed')">Confirm</button>` : ''}
+          ${s.status!=='deleted' ? `<button class="btn btn-sm btn-danger me-1" onclick="deleteSupplierCard(${index})">Delete</button>` : ''}
+        </div>
+      </div>
+    `;
+    supplierCardsContainer.appendChild(card);
+
+    if(s.quantity <= 10 && s.status!=='deleted') lowStockProducts.push(`${s.product} (${s.quantity})`);
+  });
+
+  showLowStockAlert(lowStockProducts);
+  showStatus(document.querySelector('#statusTabs .nav-link.active').textContent.toLowerCase(), null);
+  updateCharts();
+}
+
+// Update Status
+function updateStatus(index, status) {
+  suppliers[index].status = status;
+  renderCards();
+}
+
+// Delete Card with Confirmation
+function deleteSupplierCard(index) {
+  if(confirm("Are you sure you want to delete this request?")) {
+    suppliers[index].status = 'deleted';
+    renderCards();
+  }
+}
+
+// Status Filter
+function showStatus(status, event) {
+  if(event){
+    document.querySelectorAll('#statusTabs .nav-link').forEach(t=>t.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  const cards = document.querySelectorAll('.supplier-card');
+  let visibleCount = 0;
+  cards.forEach(c=>{
+    const s = suppliers[c.dataset.index].status;
+    if(status==='all' || s===status || (status==='sent' && s==='sent')){
+      c.style.display='';
+      visibleCount++;
+    } else c.style.display='none';
+  });
+  noDataMessage.innerHTML = visibleCount===0?`No items in ${capitalize(status)} request.`:'';
+}
+
+// Search
+function filterCards(){
+  const input = document.getElementById('searchSupplier').value.toUpperCase();
+  let visibleCount = 0;
+  document.querySelectorAll('.supplier-card').forEach(c=>{
+    const s = suppliers[c.dataset.index];
+    if(s.id.toUpperCase().includes(input) || s.name.toUpperCase().includes(input) || s.product.toUpperCase().includes(input)){
+      c.style.display='';
+      visibleCount++;
+    } else c.style.display='none';
+  });
+  noDataMessage.innerHTML = visibleCount===0?"No supplier items match your search.":'';
+}
+
+// Low Stock Alert
+function showLowStockAlert(products){
+  if(products.length===0){ lowStockAlert.innerHTML=''; return; }
+  lowStockAlert.innerHTML = `
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+      <strong>Low Stock Alert!</strong> ${products.join(', ')}.
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+  `;
+}
+
+// Graph (Only confirmed)
+let stockChart;
+function updateCharts(){
+  const products = {};
+  suppliers.forEach(s=>{
+    if(s.status==='confirmed') products[s.product] = (products[s.product]||0) + s.quantity;
+  });
+  const ctx = document.getElementById('stockChart').getContext('2d');
+  if(stockChart) stockChart.destroy();
+  stockChart = new Chart(ctx,{
+    type:'bar',
+    data:{ labels:Object.keys(products), datasets:[{label:'Stock Quantity', data:Object.values(products), backgroundColor:'rgba(54,162,235,0.6)'}]},
+    options:{ responsive:true, plugins:{ legend:{ display:false }}}
+  });
+}
+
+// Capitalize
+function capitalize(str){ return str.charAt(0).toUpperCase() + str.slice(1); }
+
+renderCards();
+
+// Supplier Directory
+let supplierList=[];
+const tableBody = document.getElementById('supplierTableBody');
+const noSupplierMsg = document.getElementById('noSupplierMsg');
+const dirCode = document.getElementById('dirCode');
+
+function generateCode(){ return Math.floor(100000 + Math.random()*900000); }
+
+document.getElementById('supplierListForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  const name=dirName.value.trim(), email=dirEmail.value.trim(), phone=dirPhone.value.trim();
+  if(!dirCode.value) dirCode.value = generateCode();
+  supplierList.push({name,email,phone,code:dirCode.value});
+  e.target.reset();
+  dirCode.value='';
+  renderSupplierTable();
+});
+
+function renderSupplierTable(){
+  tableBody.innerHTML='';
+  if(supplierList.length===0){ noSupplierMsg.innerText='No suppliers added yet.'; return;}
+  noSupplierMsg.innerText='';
+  supplierList.forEach((s,index)=>{
+    const row=document.createElement('tr');
+    row.innerHTML=`
+      <td>${s.name}</td>
+      <td>${s.email}</td>
+      <td>${s.phone}</td>
+      <td>${s.code}</td>
+      <td>
+        <button class="btn btn-warning btn-sm me-1" onclick="editDirectory(${index})">Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteDirectory(${index})">Delete</button>
+      </td>`;
+    tableBody.appendChild(row);
+  });
+}
+
+function editDirectory(index){
+  const s=supplierList[index];
+  dirName.value=s.name; dirEmail.value=s.email; dirPhone.value=s.phone; dirCode.value=s.code;
+  supplierList.splice(index,1);
+  renderSupplierTable();
+}
+
+function deleteDirectory(index){
+  if(confirm("Are you sure you want to delete this supplier?")){
+    supplierList.splice(index,1);
+    renderSupplierTable();
+  }
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Supermarket Admin Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+.card-status-sent { border-left: 5px solid #17a2b8; }
+.card-status-confirmed { border-left: 5px solid #28a745; }
+.card-status-deleted { border-left: 5px solid #dc3545; opacity:0.6; pointer-events:none; }
+.low-stock { border-left: 5px solid #dc3545 !important; }
+#lowStockAlert { position: fixed; bottom: 1%; right: 10px; z-index: 1050; min-width: 250px; }
+#noDataMessage, #noSupplierMsg { text-align: center; font-size: 1.2rem; color: #6c757d; margin-top: 30px; }
+</style>
+</head>
+<body style="font-family:'Poppins', sans-serif;">
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#"><img src="logo1.png" alt="logo" style="width: 40px; border-radius: 40%;"></a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarSupportedContent" style="margin-right: 40px;">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link active" href="#">Home</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Managers</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Product & Stocks</a></li>
+        <li class="nav-item"><a class="nav-link active" href="#">Suppliers</a></li>
+      </ul>
+      <i class="bi bi-person-circle fs-2" style="color: black; cursor: pointer;"></i>
+    </div>
+  </div>
+</nav>
+
+<div class="hero-section" style="margin: 3%;">
+  <div id="lowStockAlert"></div>
+
+  <div class="container-fluid p-3">
+    <h2 class="text-center mb-4">Supermarket Admin Dashboard</h2>
+
+    <div class="container mb-4">
+      <form id="addSupplierForm" class="row g-3">
+        <div class="col-md-2"><input type="text" id="supplierID" class="form-control" placeholder="Supplier ID" required></div>
+        <div class="col-md-2"><input type="text" id="supplierName" class="form-control" placeholder="Supplier Name" required></div>
+        <div class="col-md-2"><input type="text" id="productName" class="form-control" placeholder="Product Name" required></div>
+        <div class="col-md-2"><input type="number" id="quantity" class="form-control" placeholder="Quantity" required></div>
+        <div class="col-md-2"><input type="number" id="price" class="form-control" placeholder="Price/unit" required></div>
+        <div class="col-md-2 d-grid"><button type="submit" class="btn btn-primary">Send Request</button></div>
+      </form>
+    </div>
+
+    <div class="row mb-3">
+      <div class="col-md-6">
+        <input type="text" id="searchSupplier" class="form-control" placeholder="Search by ID, Name, Product..." onkeyup="filterCards()">
+      </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3" id="statusTabs">
+      <li class="nav-item"><a class="nav-link active" href="#" onclick="showStatus('all', event)">All</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('pending', event)">Pending</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('confirmed', event)">Confirmed</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('deleted', event)">Deleted</a></li>
+      <li class="nav-item"><a class="nav-link" href="#" onclick="showStatus('sent', event)">Sent Requests</a></li>
+    </ul>
+  </div>
+
+  <div class="row g-4 px-3" id="supplierCardsContainer"></div>
+  <div id="noDataMessage"></div>
+
+  <div class="row mt-5">
+    <div class="col-md-6">
+      <div class="card shadow-sm mb-3">
+        <div class="card-header bg-info text-white">Stock per Product</div>
+        <div class="card-body">
+          <canvas id="stockChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3" style="margin-bottom: 90px;">
+    <h3 class="text-center mb-3">Supplier Directory</h3>
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <form id="supplierListForm" class="row g-3 mb-4">
+          <div class="col-md-2"><input type="text" id="dirName" class="form-control" placeholder="Supplier Name" required></div>
+          <div class="col-md-2"><input type="email" id="dirEmail" class="form-control" placeholder="Email" required></div>
+          <div class="col-md-2"><input type="text" id="dirPhone" class="form-control" placeholder="Phone" required></div>
+          <div class="col-md-2"><input type="date" id="dirDOB" class="form-control" placeholder="Date of Birth" required></div>
+          <div class="col-md-2"><input type="text" id="dirCode" class="form-control" placeholder="Generated Code" readonly></div>
+          <div class="col-md-2 d-grid">
+            <button type="button" class="btn btn-secondary" id="generateCodeBtn">Generate Code</button>
+            <button type="submit" class="btn btn-success d-none" id="addSupplierBtn">Add Supplier</button>
+          </div>
+        </form>
+
+        <table class="table table-bordered table-hover text-center align-middle">
+          <thead class="table-dark">
+            <tr>
+              <th>Name</th><th>Email</th><th>Phone</th><th>DOB</th><th>Code</th><th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="supplierTableBody"></tbody>
+        </table>
+        <div id="noSupplierMsg">No suppliers</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let suppliers = [
+  {id: 'SUP001', name: 'Ravi Kumar', product: 'Rice', quantity: 20, price: 45, status: 'pending'},
+  {id: 'SUP002', name: 'Meena Sharma', product: 'Milk', quantity: 15, price: 30, status: 'pending'},
+  {id: 'SUP003', name: 'Anil Singh', product: 'Biscuits', quantity: 5, price: 20, status: 'pending'}
+]; // Admin requests (pending, confirmed, deleted, sent)
+let supplierCardsContainer = document.getElementById('supplierCardsContainer');
+let noDataMessage = document.getElementById('noDataMessage');
+
+const stockChartCanvas = document.getElementById('stockChart').getContext('2d');
+let stockChart;
+
+// Send Request
+document.getElementById('addSupplierForm').addEventListener('submit', e=>{
+  e.preventDefault();
+  let id=document.getElementById('supplierID').value;
+  let name=document.getElementById('supplierName').value;
+  let product=document.getElementById('productName').value;
+  let quantity=parseInt(document.getElementById('quantity').value);
+  let price=parseFloat(document.getElementById('price').value);
+  suppliers.unshift({id,name,product,quantity,price,status:'sent'});
+  e.target.reset();
+  renderCards();
+});
+
+// Render Cards
+function renderCards(){
+  supplierCardsContainer.innerHTML='';
+  let lowStockProducts=[];
+  suppliers.forEach((s,index)=>{
+    const card=document.createElement('div');
+    card.className='col-md-4 supplier-card';
+    card.dataset.index=index;
+    card.dataset.status=s.status;
+
+    let borderClass = s.status==='confirmed'?'card-status-confirmed':s.status==='deleted'?'card-status-deleted':'card-status-sent';
+    if(s.quantity<=10 && s.status!=='deleted') borderClass='low-stock';
+    card.classList.add(borderClass);
+
+    let buttons='';
+    if(s.status==='sent') buttons=`<button class="btn btn-warning btn-sm me-1" onclick="editCard(${index})">Edit</button>
+                                   <button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>`;
+    else if(s.status==='confirmed') buttons=`<button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>`;
+
+    card.innerHTML=`
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div><strong>ID:</strong> ${s.id}</div>
+          <div><strong>Name:</strong> ${s.name}</div>
+          <div><strong>Product:</strong> ${s.product}</div>
+          <div><strong>Quantity:</strong> ${s.quantity}</div>
+          <div><strong>Price/unit:</strong> ${s.price}</div>
+          <div><strong>Total Price:</strong> ${s.quantity*s.price}</div>
+          <div><strong>Status:</strong> <span class="badge bg-${s.status==='confirmed'?'success':'info'} text-white">${s.status}</span></div>
+        </div>
+        <div class="card-footer text-center bg-light">${buttons}</div>
+      </div>
+    `;
+    supplierCardsContainer.appendChild(card);
+  });
+  showStatus(document.querySelector('#statusTabs .active').textContent.toLowerCase());
+  renderChart();
+}
+
+// Edit Card
+function editCard(index){
+  let s=suppliers[index];
+  document.getElementById('supplierID').value=s.id;
+  document.getElementById('supplierName').value=s.name;
+  document.getElementById('productName').value=s.product;
+  document.getElementById('quantity').value=s.quantity;
+  document.getElementById('price').value=s.price;
+  suppliers.splice(index,1);
+  renderCards();
+}
+
+// Delete Card
+function deleteCard(index){
+  if(confirm('Are you sure to delete this request?')){
+    suppliers.splice(index,1);
+    renderCards();
+  }
+}
+
+// Status Filter
+function showStatus(status,event){
+  if(event){
+    document.querySelectorAll('#statusTabs .nav-link').forEach(t=>t.classList.remove('active'));
+    event.target.classList.add('active');
+  }
+  let visibleCount=0;
+  document.querySelectorAll('.supplier-card').forEach(c=>{
+    let s=suppliers[c.dataset.index].status;
+    if(status==='all'||s===status){c.style.display=''; visibleCount++;}
+    else c.style.display='none';
+  });
+  noDataMessage.innerHTML=visibleCount===0?`No items in ${status}`:'';
+}
+
+// Chart
+function renderChart(){
+  let productData={};
+  suppliers.filter(s=>s.status==='confirmed').forEach(s=>{
+    productData[s.product]=(productData[s.product]||0)+s.quantity;
+  });
+  if(stockChart) stockChart.destroy();
+  stockChart=new Chart(stockChartCanvas,{
+    type:'bar',
+    data:{labels:Object.keys(productData), datasets:[{label:'Stock Quantity', data:Object.values(productData), backgroundColor:'rgba(54,162,235,0.6)'}]},
+    options:{responsive:true, plugins:{legend:{display:false}}}
+  });
+}
+
+// Search
+document.getElementById('searchSupplier').addEventListener('keyup',()=>{
+  let input=document.getElementById('searchSupplier').value.toUpperCase();
+  document.querySelectorAll('.supplier-card').forEach(c=>{
+    let s=suppliers[c.dataset.index];
+    c.style.display=(s.id.toUpperCase().includes(input)||s.name.toUpperCase().includes(input)||s.product.toUpperCase().includes(input))?'':'none';
+  });
+});
+
+// Supplier Directory
+let supplierList=[];
+const addSupplierBtn=document.getElementById('addSupplierBtn');
+document.getElementById('generateCodeBtn').addEventListener('click',()=>{
+  document.getElementById('dirCode').value=Math.floor(100000+Math.random()*900000);
+  addSupplierBtn.classList.remove('d-none');
+});
+document.getElementById('supplierListForm').addEventListener('submit',e=>{
+  e.preventDefault();
+  supplierList.push({
+    name: dirName.value, email: dirEmail.value, phone: dirPhone.value, dob: dirDOB.value, code: dirCode.value
+  });
+  renderSupplierTable();
+  e.target.reset();
+  addSupplierBtn.classList.add('d-none');
+  document.getElementById('dirCode').value='';
+});
+function renderSupplierTable(){
+  let tbody=document.getElementById('supplierTableBody');
+  tbody.innerHTML='';
+  if(supplierList.length===0){document.getElementById('noSupplierMsg').innerText='No suppliers'; return;}
+  document.getElementById('noSupplierMsg').innerText='';
+  supplierList.forEach((s,i)=>{
+    let tr=document.createElement('tr');
+    tr.innerHTML=`<td>${s.name}</td><td>${s.email}</td><td>${s.phone}</td><td>${s.dob}</td><td>${s.code}</td>
+                  <td><button class="btn btn-warning btn-sm me-1" onclick="editSupplier(${i})">Edit</button>
+                      <button class="btn btn-danger btn-sm" onclick="deleteSupplier(${i})">Delete</button></td>`;
+    tbody.appendChild(tr);
+  });
+}
+function editSupplier(i){
+  let s=supplierList[i];
+  dirName.value=s.name; dirEmail.value=s.email; dirPhone.value=s.phone; dirDOB.value=s.dob; dirCode.value=s.code;
+  addSupplierBtn.classList.remove('d-none');
+  supplierList.splice(i,1);
+  renderSupplierTable();
+}
+function deleteSupplier(i){if(confirm('Are you sure?')){supplierList.splice(i,1);renderSupplierTable();}}
+
+renderCards();
+
+function updateStatus(index, status){
+    suppliers[index].status = status;
+    renderCards();
+}
+let buttons = '';
+if (s.status === 'sent') {
+    // Sent Requests: only Edit and Delete
+    buttons = `<button class="btn btn-warning btn-sm me-1" onclick="editCard(${index})">Edit</button>
+               <button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>`;
+} else if (s.status === 'confirmed') {
+    // Confirmed: only Delete
+    buttons = `<button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>`;
+} else if (s.status === 'pending') {
+    // Pending: Confirm and Delete
+    buttons = `<button class="btn btn-success btn-sm me-1" onclick="updateStatus(${index}, 'confirmed')">Confirm</button>
+               <button class="btn btn-danger btn-sm" onclick="deleteCard(${index})">Delete</button>`;
+}
+
+</script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html> -->
